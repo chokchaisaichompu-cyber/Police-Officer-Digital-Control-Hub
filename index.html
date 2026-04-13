@@ -7,35 +7,17 @@
     <meta name="robots" content="noindex, nofollow">
     
     <style>
-        /* ล้างค่าเริ่มต้นและป้องกันการ Bounce ของจอ */
-        html, body { 
-            margin: 0; 
-            padding: 0; 
-            height: 100%; 
-            width: 100%;
-            overflow: hidden; /* ป้องกันสกอร์บาร์ซ้อนกัน */
-            background-color: #f4f4f9; /* ใส่สีพื้นหลังอ่อนๆ ลดอาการวูบขาว */
+        body, html { 
+            margin: 0; padding: 0; height: 100vh; width: 100vw; 
+            overflow: hidden; background-color: #f4f4f9; 
         }
-
-        /* ปรับปรุง Container ของ iframe */
         .iframe-container {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            -webkit-overflow-scrolling: touch; /* สำคัญ: ทำให้ iOS Scroll ลื่นเหมือนแอปปกติ */
-            overflow-y: auto;
+            width: 100%; height: 100%;
+            -webkit-overflow-scrolling: touch;
         }
-
         iframe {
-            width: 100%;
-            height: 100%;
-            border: none;
-            display: block;
-            /* ใช้ hardware acceleration ช่วยลดอาการกระตุก */
-            transform: translateZ(0); 
-            -webkit-transform: translateZ(0);
+            width: 100%; height: 100%; border: none;
+            transform: translateZ(0); -webkit-transform: translateZ(0);
         }
     </style>
 </head>
@@ -44,10 +26,15 @@
     <div class="iframe-container">
         <iframe 
             src="https://script.google.com/macros/s/AKfycbw3n1KliQeJYBGHBfQh4FzOWjIU9BNty5uYXUsjUijIAhcMuzp5EaGIkRAJK4pSS-_XsQ/exec"
-            allow="geolocation; microphone; camera" 
-            loading="lazy">
+            allow="geolocation; microphone; camera; clipboard-write" 
+            loading="eager">
         </iframe>
     </div>
 
+    <script>
+        // ป้องกัน Browser ค้างเมื่อมีการ Drag ไฟล์หลุดนอก iframe
+        window.addEventListener("dragover", e => e.preventDefault(), false);
+        window.addEventListener("drop", e => e.preventDefault(), false);
+    </script>
 </body>
 </html>
