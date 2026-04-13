@@ -4,28 +4,31 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>ธุรการ ป สภ.เมืองนครนายก</title>
+    <meta name="robots" content="noindex, nofollow">
     
     <style>
         body, html { 
             margin: 0; padding: 0; height: 100vh; width: 100vw; 
             overflow: hidden; background-color: #f4f4f9; 
             
-            /* --- จุดสำคัญ: ป้องกัน Chrome มือถือเข้าใจผิดเรื่องการลาก --- */
-            /* บอก Chrome ว่าไม่ต้องพยายามเดาว่าเราจะลากหรือจะซูม ให้ส่งค่าการแตะไปที่ iframe ทันที */
-            touch-action: pan-x pan-y; 
+            /* ป้องกัน Chrome เปิดเมนูแว่นขยายหรือ Context Menu เอง */
+            touch-action: none; 
             -webkit-user-select: none;
             user-select: none;
+            -webkit-touch-callout: none;
         }
 
         .app-container {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
-            /* ป้องกันการ Drag ระดับ Container */
-            touch-action: none; 
+            /* ยอมให้มีการ Scroll ภายในได้ แต่ห้ามทำ Drag & Drop */
+            touch-action: pan-x pan-y; 
         }
 
         iframe {
             width: 100%; height: 100%; border: none; display: block;
+            /* ช่วยเรื่องความเร็วในการเรนเดอร์ */
+            content-visibility: auto;
         }
     </style>
 </head>
@@ -34,27 +37,45 @@
     <div class="app-container">
         <iframe 
             src="https://script.google.com/macros/s/AKfycbw3n1KliQeJYBGHBfQh4FzOWjIU9BNty5uYXUsjUijIAhcMuzp5EaGIkRAJK4pSS-_XsQ/exec"
-            allow="geolocation; microphone; camera; clipboard-write" 
+            allow="geolocation; microphone; camera; clipboard-write; display-capture" 
             loading="eager">
         </iframe>
     </div>
 
     <script>
-        // ปิดระบบ Drag & Drop ที่ระดับ Window อย่างสิ้นเชิงเพื่อไม่ให้ Chrome เก็บ State
-        const killEvent = (e) => {
+        /**
+         * 1. ตัดวงจร Drag & Drop ถาวร (ป้องกัน Chrome เก็บ State การลาก)
+         */
+        const killDrag = (e) => {
             e.preventDefault();
             e.stopPropagation();
+            if (e.dataTransfer) {
+                e.dataTransfer.dropEffect = 'none';
+            }
         };
 
         ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(event => {
-            window.addEventListener(event, killEvent, { passive: false });
+            window.addEventListener(event, killDrag, { passive: false });
         });
 
-        // แก้ปัญหาปุ่มค้าง: เมื่อมีการปล่อยนิ้ว ให้เคลียร์สถานะทั้งหมด
+        /**
+         * 2. แก้ปัญหาปุ่มค้าง (Clear State ทันทีที่ยกนิ้ว)
+         */
         window.addEventListener('touchend', () => {
-            // บังคับให้ Chrome ลืมสถานะการกดค้าง
+            // บังคับคืนค่า Focus เพื่อล้างสถานะ "กดค้าง" ของ Chrome
+            if (document.activeElement) {
+                document.activeElement.blur();
+            }
             window.focus();
         }, { passive: true });
+
+        // ป้องกันเมนูคลิกขวาเด้งแทรก
+        window.oncontextmenu = (e) => {
+            if (e.target.tagName !== 'IFRAME') {
+                e.preventDefault();
+                return false;
+            }
+        };
     </script>
 </body>
 </html>
