@@ -4,37 +4,28 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>ธุรการ ป สภ.เมืองนครนายก</title>
-    <meta name="robots" content="noindex, nofollow">
     
     <style>
-        /* 1. บังคับหน้าจอให้เต็มเป๊ะและห้าม Scroll เกิน */
         body, html { 
-            margin: 0; 
-            padding: 0; 
-            height: 100vh; 
-            width: 100vw; 
-            overflow: hidden; 
-            background-color: #f4f4f9; 
-            /* ป้องกันการกดค้างแล้วขึ้นแว่นขยายหรือเมนูเลือกคำ */
-            -webkit-touch-callout: none;
+            margin: 0; padding: 0; height: 100vh; width: 100vw; 
+            overflow: hidden; background-color: #f4f4f9; 
+            
+            /* --- จุดสำคัญ: ป้องกัน Chrome มือถือเข้าใจผิดเรื่องการลาก --- */
+            /* บอก Chrome ว่าไม่ต้องพยายามเดาว่าเราจะลากหรือจะซูม ให้ส่งค่าการแตะไปที่ iframe ทันที */
+            touch-action: pan-x pan-y; 
             -webkit-user-select: none;
             user-select: none;
         }
 
-        /* 2. ตัวคลุม iframe ให้แสดงผลเต็มพื้นที่ */
         .app-container {
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+            top: 0; left: 0; width: 100%; height: 100%;
+            /* ป้องกันการ Drag ระดับ Container */
+            touch-action: none; 
         }
 
         iframe {
-            width: 100%;
-            height: 100%;
-            border: none;
-            display: block;
+            width: 100%; height: 100%; border: none; display: block;
         }
     </style>
 </head>
@@ -49,27 +40,21 @@
     </div>
 
     <script>
-        /**
-         * 3. ส่วนป้องกันอาการค้าง: ปิดระบบ Drag and Drop อย่างเด็ดขาด
-         */
-        const disableDrag = (e) => {
-            // เช็คว่าถ้ามีการพยายามลากไฟล์มา ให้สั่งยกเลิกทันที
+        // ปิดระบบ Drag & Drop ที่ระดับ Window อย่างสิ้นเชิงเพื่อไม่ให้ Chrome เก็บ State
+        const killEvent = (e) => {
             e.preventDefault();
             e.stopPropagation();
         };
 
-        // สั่งปิดเหตุการณ์ลากวางทั้งหมดที่ระดับ Window
-        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-            window.addEventListener(eventName, disableDrag, { passive: false });
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(event => {
+            window.addEventListener(event, killEvent, { passive: false });
         });
 
-        // ปิดเมนูกดค้าง (Context Menu) เพื่อไม่ให้ Chrome มือถือหน่วง
-        window.oncontextmenu = function(e) {
-            if (e.target.tagName !== 'IFRAME') {
-                e.preventDefault();
-                return false;
-            }
-        };
+        // แก้ปัญหาปุ่มค้าง: เมื่อมีการปล่อยนิ้ว ให้เคลียร์สถานะทั้งหมด
+        window.addEventListener('touchend', () => {
+            // บังคับให้ Chrome ลืมสถานะการกดค้าง
+            window.focus();
+        }, { passive: true });
     </script>
 </body>
 </html>
