@@ -7,7 +7,7 @@
     <meta name="robots" content="noindex, nofollow">
     
     <style>
-        /* ล้างค่าเริ่มต้นและล็อคขนาดหน้าจอให้พอดีเป๊ะ */
+        /* 1. บังคับหน้าจอให้เต็มเป๊ะและห้าม Scroll เกิน */
         body, html { 
             margin: 0; 
             padding: 0; 
@@ -15,17 +15,19 @@
             width: 100vw; 
             overflow: hidden; 
             background-color: #f4f4f9; 
+            /* ป้องกันการกดค้างแล้วขึ้นแว่นขยายหรือเมนูเลือกคำ */
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
         }
 
-        /* Container สำหรับคุม iframe */
-        .iframe-container {
+        /* 2. ตัวคลุม iframe ให้แสดงผลเต็มพื้นที่ */
+        .app-container {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            /* ทำให้การเลื่อนใน iOS ลื่นเหมือนแอปจริง */
-            -webkit-overflow-scrolling: touch;
         }
 
         iframe {
@@ -33,45 +35,38 @@
             height: 100%;
             border: none;
             display: block;
-            /* ใช้ Hardware Acceleration ช่วยให้ Chrome ประมวลผลลื่นขึ้น */
-            transform: translateZ(0); 
-            -webkit-transform: translateZ(0);
         }
     </style>
 </head>
 <body>
 
-    <div class="iframe-container">
+    <div class="app-container">
         <iframe 
             src="https://script.google.com/macros/s/AKfycbw3n1KliQeJYBGHBfQh4FzOWjIU9BNty5uYXUsjUijIAhcMuzp5EaGIkRAJK4pSS-_XsQ/exec"
-            /* เปิดสิทธิ์ที่จำเป็นทั้งหมด รวมถึง Clipboard สำหรับการก๊อปปี้ข้อความ */
-            allow="geolocation; microphone; camera; clipboard-write; display-capture" 
+            allow="geolocation; microphone; camera; clipboard-write" 
             loading="eager">
         </iframe>
     </div>
 
     <script>
         /**
-         * ป้องกัน Chrome ค้างจากการลากไฟล์ (Drag and Drop)
-         * โดยเฉพาะเมื่อลากไฟล์หลุดออกนอกขอบของระบบจัดการไฟล์ใน iframe
+         * 3. ส่วนป้องกันอาการค้าง: ปิดระบบ Drag and Drop อย่างเด็ดขาด
          */
-        const preventGlobalDrag = (e) => {
-            // ดักจับเฉพาะตอนที่มีการลากไฟล์จริงๆ
-            if (e.dataTransfer && e.dataTransfer.types && e.dataTransfer.types.includes('Files')) {
-                e.preventDefault();
-                e.stopPropagation();
-            }
+        const disableDrag = (e) => {
+            // เช็คว่าถ้ามีการพยายามลากไฟล์มา ให้สั่งยกเลิกทันที
+            e.preventDefault();
+            e.stopPropagation();
         };
 
-        // ใช้ { passive: false } เพื่อบังคับให้ Chrome หยุดพฤติกรรมมาตรฐาน (เช่น การพยายามเปิดไฟล์)
-        window.addEventListener("dragover", preventGlobalDrag, { passive: false });
-        window.addEventListener("drop", preventGlobalDrag, { passive: false });
+        // สั่งปิดเหตุการณ์ลากวางทั้งหมดที่ระดับ Window
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            window.addEventListener(eventName, disableDrag, { passive: false });
+        });
 
-        // ป้องกันอาการ "วูบ" หรือ "ค้าง" เมื่อมีการกดค้างบนพื้นที่ว่างใน Chrome มือถือ
-        window.oncontextmenu = function(event) {
-            if (event.target.tagName !== 'IFRAME') {
-                event.preventDefault();
-                event.stopPropagation();
+        // ปิดเมนูกดค้าง (Context Menu) เพื่อไม่ให้ Chrome มือถือหน่วง
+        window.oncontextmenu = function(e) {
+            if (e.target.tagName !== 'IFRAME') {
+                e.preventDefault();
                 return false;
             }
         };
